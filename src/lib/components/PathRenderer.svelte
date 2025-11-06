@@ -5,12 +5,20 @@
     width: number;
     height: number;
     walls?: SvelteSet<CellKey>;
+    start?: [number, number];
+    goal?: [number, number];
   };
 
   type CellKey = `${number},${number}`;
-  type DragAction = "add" | "remove";
+  type DragAction = "add" | "remove" | "movestart" | "movegoal";
 
-  let { width, height, walls = new SvelteSet() }: Props = $props();
+  let {
+    width,
+    height,
+    walls = new SvelteSet(),
+    start = [0, 0],
+    goal = [width - 1, height - 1],
+  }: Props = $props();
 
   let mouseDown = false;
   // eslint-disable-next-line svelte/prefer-svelte-reactivity
@@ -18,13 +26,18 @@
   // initial value doesn't matter
   let dragAction: DragAction = "add";
 
-  function cellOnMouseDown(
-    x: number,
-    y: number,
-    action: "add" | "remove"
-  ): void {
+  function cellOnMouseDown(x: number, y: number, rightClick: boolean): void {
     mouseDown = true;
-    dragAction = action;
+
+    if (rightClick) {
+      dragAction = "remove";
+    } else if (x === start[0] && y === start[1]) {
+      dragAction = "movestart";
+    } else if (x === goal[0] && y === goal[1]) {
+      dragAction = "movegoal";
+    } else {
+      dragAction = "add";
+    }
 
     toggled.add(getKey(x, y));
 
@@ -33,16 +46,36 @@
 
   function cellOnMouseMove(x: number, y: number): void {
     const key = getKey(x, y);
-    if (!mouseDown || toggled.has(key)) {
+    if (
+      !mouseDown ||
+      toggled.has(key) ||
+      (x === start[0] && y === start[1]) ||
+      (x === goal[0] && y === goal[1])
+    ) {
       return;
     }
 
     toggled.add(key);
 
-    if (dragAction === "add") {
-      walls.add(key);
-    } else {
-      walls.delete(key);
+    switch (dragAction) {
+      case "add": {
+        walls.add(key);
+        break;
+      }
+      case "remove": {
+        walls.delete(key);
+        break;
+      }
+      case "movestart": {
+        walls.delete(key);
+        start = [x, y];
+        break;
+      }
+      case "movegoal": {
+        walls.delete(key);
+        goal = [x, y];
+        break;
+      }
     }
   }
 
@@ -65,9 +98,11 @@
         <div
           class="cell"
           class:wall={walls.has(getKey(x, y))}
+          class:start={x === start[0] && y === start[1]}
+          class:goal={x === goal[0] && y === goal[1]}
           onmousedown={(event) => {
-            // right click = remove
-            cellOnMouseDown(x, y, event.button === 2 ? "remove" : "add");
+            // event.button === 2 is a right click
+            cellOnMouseDown(x, y, event.button === 2);
           }}
           onmousemove={() => {
             cellOnMouseMove(x, y);
@@ -99,6 +134,14 @@
 
       &.wall {
         background-color: #000;
+      }
+
+      &.start {
+        background-color: #0f0;
+      }
+
+      &.goal {
+        background-color: #f00;
       }
     }
   }
