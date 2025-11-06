@@ -58,42 +58,67 @@
     const key = getKey(x, y);
     if (
       !mouseDown ||
-      toggled.has(key) ||
       (x === start[0] && y === start[1]) ||
       (x === goal[0] && y === goal[1])
     ) {
       return;
     }
 
-    toggled.add(key);
-
     switch (dragAction) {
       case "add": {
-        walls.add(key);
+        if (!toggled.has(key)) {
+          walls.add(key);
+        }
+
         break;
       }
       case "remove": {
-        walls.delete(key);
+        if (!toggled.has(key)) {
+          walls.delete(key);
+        }
+
         break;
       }
       case "movestart": {
-        walls.delete(key);
-        start = [x, y];
+        if (x !== goal[0] || y !== goal[1]) {
+          start = [x, y];
+        }
+
         break;
       }
       case "movegoal": {
-        walls.delete(key);
-        goal = [x, y];
+        if (x !== start[0] || y !== start[1]) {
+          goal = [x, y];
+        }
+
         break;
       }
     }
+
+    toggled.add(key);
+  }
+
+  function cellOnMouseUp(x: number, y: number): void {
+    switch (dragAction) {
+      case "movestart":
+      // fallthrough
+      case "movegoal": {
+        const key = getKey(x, y);
+
+        walls.delete(key);
+      }
+    }
+  }
+
+  function documentOnMouseUp(): void {
+    mouseDown = false;
+    toggled.clear();
   }
 </script>
 
 <svelte:document
   onmouseup={() => {
-    mouseDown = false;
-    toggled.clear();
+    documentOnMouseUp();
   }}
 />
 
@@ -113,6 +138,9 @@
           }}
           onmousemove={() => {
             cellOnMouseMove(x, y);
+          }}
+          onmouseup={() => {
+            cellOnMouseUp(x, y);
           }}
           oncontextmenu={(event) => {
             event.preventDefault();

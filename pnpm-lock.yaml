@@ -29,9 +29,6 @@ importers:
       eslint:
         specifier: ^9.22.0
         version: 9.38.0
-      eslint-config-prettier:
-        specifier: ^10.0.1
-        version: 10.1.8(eslint@9.38.0)
       eslint-plugin-svelte:
         specifier: ^3.0.0
         version: 3.12.4(eslint@9.38.0)(svelte@5.41.0)
@@ -731,12 +728,6 @@ packages:
   escape-string-regexp@4.0.0:
     resolution: {integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==}
     engines: {node: '>=10'}
-
-  eslint-config-prettier@10.1.8:
-    resolution: {integrity: sha512-82GZUjRS0p/jganf6q1rEO25VSoHH0hKPCTrgillPjdI/3bgBhAE1QzHrHTizjpRvy6pGAvKjDJtk2pF9NDq8w==}
-    hasBin: true
-    peerDependencies:
-      eslint: '>=7.0.0'
 
   eslint-plugin-svelte@3.12.4:
     resolution: {integrity: sha512-hD7wPe+vrPgx3U2X2b/wyTMtWobm660PygMGKrWWYTc9lvtY8DpNFDaU2CJQn1szLjGbn/aJ3g8WiXuKakrEkw==}
@@ -1836,10 +1827,6 @@ snapshots:
       '@esbuild/win32-x64': 0.25.11
 
   escape-string-regexp@4.0.0: {}
-
-  eslint-config-prettier@10.1.8(eslint@9.38.0):
-    dependencies:
-      eslint: 9.38.0
 
   eslint-plugin-svelte@3.12.4(eslint@9.38.0)(svelte@5.41.0):
     dependencies:
