@@ -11,7 +11,7 @@
 
   <div class="centre" style="left: -8px; position: relative;">
     <div class="path-container">
-      <PathRenderer width={50} height={25} />
+      <PathRenderer width={51} height={25} />
     </div>
   </div>
 </main>

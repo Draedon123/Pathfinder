@@ -1,4 +1,14 @@
+<script lang="ts" module>
+  function getKey(x: number, y: number): CellKey {
+    return `${x},${y}`;
+  }
+
+  export { getKey };
+</script>
+
 <script lang="ts">
+  import { createMaze } from "$lib/createMaze";
+
   import { SvelteSet } from "svelte/reactivity";
 
   type Props = {
@@ -9,15 +19,15 @@
     goal?: [number, number];
   };
 
-  type CellKey = `${number},${number}`;
+  export type CellKey = `${number},${number}`;
   type DragAction = "add" | "remove" | "movestart" | "movegoal";
 
   let {
     width,
     height,
-    walls = new SvelteSet(),
     start = [0, 0],
     goal = [width - 1, height - 1],
+    walls = createMaze(width, height, start),
   }: Props = $props();
 
   let mouseDown = false;
@@ -78,10 +88,6 @@
       }
     }
   }
-
-  function getKey(x: number, y: number): CellKey {
-    return `${x},${y}`;
-  }
 </script>
 
 <svelte:document
@@ -100,6 +106,7 @@
           class:wall={walls.has(getKey(x, y))}
           class:start={x === start[0] && y === start[1]}
           class:goal={x === goal[0] && y === goal[1]}
+          style="grid-column-start: {x + 1}; grid-row-start: {y + 1};"
           onmousedown={(event) => {
             // event.button === 2 is a right click
             cellOnMouseDown(x, y, event.button === 2);
@@ -142,6 +149,10 @@
 
       &.goal {
         background-color: #f00;
+      }
+
+      &:focus {
+        outline: none;
       }
     }
   }
