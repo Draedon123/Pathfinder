@@ -1,1 +1,0 @@
-import"../chunks/DsnmJJEf.js";import"../chunks/Dsji99ZH.js";import{o as r,h as t,a as n,$ as m}from"../chunks/kzI1ENl_.js";var e=r("<main><h1>Pathfinder</h1> <p>Hello, world!</p></main>");function f(a){var o=e();t(i=>{m.title="Pathfinder"}),n(a,o)}export{f as component};
