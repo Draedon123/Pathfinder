@@ -1,4 +1,8 @@
-import { getKey, type CellKey } from "$lib/components/PathRenderer.svelte";
+import {
+  getKey,
+  type CellKey,
+  type PathfindingAlgorithm,
+} from "$lib/components/PathRenderer.svelte";
 import { MinPriorityQueue } from "$lib/MinPriorityQueue";
 import type { SvelteSet } from "svelte/reactivity";
 
@@ -8,14 +12,14 @@ type Cell = {
   isWall: boolean;
 };
 
-const dijkstra = (
-  start: [number, number],
-  end: [number, number],
+const dijkstra: PathfindingAlgorithm = (
+  start: Pair<number>,
+  end: Pair<number>,
   width: number,
   height: number,
   walls: SvelteSet<CellKey>
-): [number, number][] => {
-  const path: [number, number][] = [];
+): Pair<number>[] => {
+  const path: Pair<number>[] = [];
   const queue = new MinPriorityQueue<Cell>();
   const distanceMap = new Map<CellKey, number>();
   const previousMap = new Map<CellKey, CellKey | null>();

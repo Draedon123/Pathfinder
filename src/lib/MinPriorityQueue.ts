@@ -115,6 +115,37 @@ class MinPriorityQueue<T> {
     this.bubbleUp(i);
   }
 
+  public delete(key: string): boolean {
+    const i = this.indexMap.get(key);
+    if (i === undefined) {
+      return false;
+    }
+
+    const lastIndex = this.data.length - 1;
+
+    if (i === lastIndex) {
+      this.indexMap.delete(key);
+      this.data.pop();
+
+      return true;
+    }
+
+    this.swap(i, lastIndex);
+    const removed = this.data.pop() as QueueNode<T>;
+    this.indexMap.delete(removed.key);
+
+    const current = this.data[i];
+    const parentIndex = this.parent(i);
+
+    if (i > 0 && this.data[parentIndex].priority > current.priority) {
+      this.bubbleUp(i);
+    } else {
+      this.minHeapify(i);
+    }
+
+    return true;
+  }
+
   public has(key: string): boolean {
     return this.indexMap.has(key);
   }

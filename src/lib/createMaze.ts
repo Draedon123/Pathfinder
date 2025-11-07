@@ -12,8 +12,8 @@ type Cell = {
 function createMaze(
   width: number,
   height: number,
-  start: [number, number],
-  end: [number, number]
+  start: Pair<number>,
+  end: Pair<number>
 ): SvelteSet<CellKey> {
   const cells: Cell[] = [];
   const originalWidth = width;
@@ -130,8 +130,8 @@ function getNeighbours(
   height: number,
   cells: Cell[],
   distanceMultiplier: number = 1
-): { cell: Cell; direction: [number, number] }[] {
-  const directions: [number, number][] = [
+): { cell: Cell; direction: Pair<number> }[] {
+  const directions: Pair<number>[] = [
     [1, 0],
     [0, 1],
     [-1, 0],

@@ -5,12 +5,12 @@
   import { createMaze } from "$lib/createMaze";
   import { SvelteSet } from "svelte/reactivity";
 
-  // eslint-ignore svelte/no-unnecessary-state-wrap
+  // eslint-disable-next-line svelte/no-unnecessary-state-wrap
   let walls = $state(new SvelteSet<CellKey>());
   let width = $state(50);
   let height = $state(25);
-  let start: [number, number] = $state([0, 0]);
-  let end: [number, number] = $state([49, 24]);
+  let start: Pair<number> = $state([0, 0]);
+  let end: Pair<number> = $state([49, 24]);
 
   function clear(): void {
     walls.clear();

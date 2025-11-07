@@ -3,11 +3,19 @@
     return `${x},${y}`;
   }
 
-  export { getKey };
+  type PathfindingAlgorithm = (
+    start: Pair<number>,
+    end: Pair<number>,
+    width: number,
+    height: number,
+    walls: SvelteSet<CellKey>
+  ) => Pair<number>[];
+
+  export { getKey, type PathfindingAlgorithm };
 </script>
 
 <script lang="ts">
-  import { dijkstra } from "$lib/algorithms/dijkstra";
+  import { astar } from "$lib/algorithms/astar";
 
   import { createMaze } from "$lib/createMaze";
   import { SvelteSet } from "svelte/reactivity";
@@ -16,8 +24,9 @@
     width: number;
     height: number;
     walls?: SvelteSet<CellKey>;
-    start?: [number, number];
-    end?: [number, number];
+    start?: Pair<number>;
+    end?: Pair<number>;
+    pathfindingAlgorithm?: PathfindingAlgorithm;
   };
 
   export type CellKey = `${number},${number}`;
@@ -29,6 +38,7 @@
     start = $bindable([0, 0]),
     end = $bindable([width - 1, height - 1]),
     walls = $bindable(createMaze(width, height, start, end)),
+    pathfindingAlgorithm: algorithm = astar,
   }: Props = $props();
 
   let mouseDown = false;
@@ -36,7 +46,7 @@
   let toggled = new Set<CellKey>();
   // initial value doesn't matter
   let dragAction: DragAction = "add";
-  let path = $derived(dijkstra(start, end, width, height, walls));
+  let path = $derived(algorithm(start, end, width, height, walls));
 
   function cellOnMouseDown(x: number, y: number, rightClick: boolean): void {
     mouseDown = true;

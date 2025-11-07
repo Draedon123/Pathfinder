@@ -12,6 +12,8 @@ declare global {
   type WithChildren = {
     children?: import("svelte").Snippet;
   };
+
+  type Pair<T> = [T, T];
 }
 
 export {};
