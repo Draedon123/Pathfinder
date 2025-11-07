@@ -1,9 +1,26 @@
 <script lang="ts">
+  import { astar } from "$lib/algorithms/astar";
+  import { dijkstra } from "$lib/algorithms/dijkstra";
   import PathRenderer, {
     type CellKey,
+    type PathfindingAlgorithm,
   } from "$lib/components/PathRenderer.svelte";
   import { createMaze } from "$lib/createMaze";
   import { SvelteSet } from "svelte/reactivity";
+
+  const PATHFINDING_ALGORITHMS = {
+    dijkstra: {
+      name: "Dijkstra's Algorithm",
+      algorithm: dijkstra,
+    },
+    astar: {
+      name: "A*",
+      algorithm: astar,
+    },
+  } as const satisfies Record<
+    string,
+    { name: string; algorithm: PathfindingAlgorithm }
+  >;
 
   // eslint-disable-next-line svelte/no-unnecessary-state-wrap
   let walls = $state(new SvelteSet<CellKey>());
@@ -11,6 +28,9 @@
   let height = $state(25);
   let start: Pair<number> = $state([0, 0]);
   let end: Pair<number> = $state([49, 24]);
+
+  let algorithmName: keyof typeof PATHFINDING_ALGORITHMS = $state("astar");
+  let algorithm = $derived(PATHFINDING_ALGORITHMS[algorithmName].algorithm);
 
   function clear(): void {
     walls.clear();
@@ -30,13 +50,28 @@
 
   <div class="centre" style="left: -8px; position: relative;">
     <div class="path-container">
-      <PathRenderer {width} {height} bind:start bind:end bind:walls />
+      <PathRenderer
+        {width}
+        {height}
+        bind:start
+        bind:end
+        bind:walls
+        pathfindingAlgorithm={algorithm}
+      />
     </div>
 
     <div>
       <button onclick={clear}>Clear</button>
       <button onclick={generateMaze}>Generate Maze</button>
     </div>
+
+    <select bind:value={algorithmName}>
+      {#each Object.entries(PATHFINDING_ALGORITHMS) as [key, algorithm] (key)}
+        <option value={key} selected={key === algorithmName}
+          >{algorithm.name}</option
+        >
+      {/each}
+    </select>
   </div>
 </main>
 
