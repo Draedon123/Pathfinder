@@ -1,6 +1,7 @@
 import { SvelteSet } from "svelte/reactivity";
 import { getKey, type CellKey } from "./components/PathRenderer.svelte";
 import { OrderedSet } from "./OrderedSet";
+import { dijkstra } from "./algorithms/dijkstra";
 
 type Cell = {
   x: number;
@@ -11,9 +12,15 @@ type Cell = {
 function createMaze(
   width: number,
   height: number,
-  start: [number, number]
+  start: [number, number],
+  end: [number, number]
 ): SvelteSet<CellKey> {
   const cells: Cell[] = [];
+  const originalWidth = width;
+  const originalHeight = height;
+
+  width = width % 2 === 0 ? width + 1 : width;
+  height = height % 2 === 0 ? height + 1 : height;
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -35,12 +42,15 @@ function createMaze(
   );
   const frontier = new OrderedSet<Cell>();
   const inMaze = new Set<CellKey>();
+  const endCell = getCell(cells, width, end[0], end[1]);
+  const endCellNeighbours = getNeighbours(endCell, width, height, cells, 2);
 
   startingCell.isWall = false;
+  endCell.isWall = false;
 
   inMaze.add(getKey(startingCell.x, startingCell.y));
 
-  for (const neighbour of startingCellNeighbours) {
+  for (const neighbour of [...startingCellNeighbours, ...endCellNeighbours]) {
     frontier.add(neighbour.cell);
   }
 
@@ -86,9 +96,32 @@ function createMaze(
     }
   }
 
-  return new SvelteSet(
-    cells.filter((cell) => cell.isWall).map((cell) => getKey(cell.x, cell.y))
+  const walls = new SvelteSet(
+    cells
+      .filter(
+        (cell) =>
+          cell.isWall &&
+          (cell.x !== end[0] || cell.y !== end[1]) &&
+          cell.x < originalWidth &&
+          cell.y < originalHeight
+      )
+      .map((cell) => getKey(cell.x, cell.y))
   );
+
+  // hack to ensure the maze is always solvable...
+  // wouldn't need this if the width and height were guaranteed to be odd
+  const pathLength = dijkstra(
+    start,
+    end,
+    originalWidth,
+    originalHeight,
+    walls
+  ).length;
+  if (pathLength <= 1) {
+    return createMaze(originalWidth, originalHeight, start, end);
+  }
+
+  return walls;
 }
 
 function getNeighbours(

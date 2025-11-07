@@ -1,5 +1,23 @@
 <script lang="ts">
-  import PathRenderer from "$lib/components/PathRenderer.svelte";
+  import PathRenderer, {
+    type CellKey,
+  } from "$lib/components/PathRenderer.svelte";
+  import { createMaze } from "$lib/createMaze";
+  import { SvelteSet } from "svelte/reactivity";
+
+  let walls = new SvelteSet<CellKey>();
+  let width = $state(50);
+  let height = $state(25);
+  let start: [number, number] = $state([0, 0]);
+  let end: [number, number] = $state([49, 24]);
+
+  function clear(): void {
+    walls.clear();
+  }
+
+  function generateMaze(): void {
+    walls = createMaze(width, height, start, end);
+  }
 </script>
 
 <svelte:head>
@@ -11,7 +29,12 @@
 
   <div class="centre" style="left: -8px; position: relative;">
     <div class="path-container">
-      <PathRenderer width={51} height={25} />
+      <PathRenderer {width} {height} bind:start bind:end bind:walls />
+    </div>
+
+    <div>
+      <button onclick={clear}>Clear</button>
+      <button onclick={generateMaze}>Generate Maze</button>
     </div>
   </div>
 </main>
@@ -41,7 +64,8 @@
 
   .centre {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
 
     width: 100%;
   }

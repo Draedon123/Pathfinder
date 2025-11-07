@@ -17,7 +17,7 @@
     height: number;
     walls?: SvelteSet<CellKey>;
     start?: [number, number];
-    goal?: [number, number];
+    end?: [number, number];
   };
 
   export type CellKey = `${number},${number}`;
@@ -26,9 +26,9 @@
   let {
     width,
     height,
-    start = [0, 0],
-    goal = [width - 1, height - 1],
-    walls = createMaze(width, height, start),
+    start = $bindable([0, 0]),
+    end = $bindable([width - 1, height - 1]),
+    walls = $bindable(createMaze(width, height, start, end)),
   }: Props = $props();
 
   let mouseDown = false;
@@ -36,7 +36,7 @@
   let toggled = new Set<CellKey>();
   // initial value doesn't matter
   let dragAction: DragAction = "add";
-  let path = $derived(dijkstra(start, goal, width, height, walls));
+  let path = $derived(dijkstra(start, end, width, height, walls));
 
   function cellOnMouseDown(x: number, y: number, rightClick: boolean): void {
     mouseDown = true;
@@ -45,7 +45,7 @@
       dragAction = "remove";
     } else if (x === start[0] && y === start[1]) {
       dragAction = "movestart";
-    } else if (x === goal[0] && y === goal[1]) {
+    } else if (x === end[0] && y === end[1]) {
       dragAction = "movegoal";
     } else {
       dragAction = "add";
@@ -60,7 +60,7 @@
     if (
       !mouseDown ||
       (x === start[0] && y === start[1]) ||
-      (x === goal[0] && y === goal[1])
+      (x === end[0] && y === end[1])
     ) {
       return;
     }
@@ -81,7 +81,7 @@
         break;
       }
       case "movestart": {
-        if (x !== goal[0] || y !== goal[1]) {
+        if (x !== end[0] || y !== end[1]) {
           start = [x, y];
         }
 
@@ -89,7 +89,7 @@
       }
       case "movegoal": {
         if (x !== start[0] || y !== start[1]) {
-          goal = [x, y];
+          end = [x, y];
         }
 
         break;
@@ -131,7 +131,7 @@
           class="cell"
           class:wall={walls.has(getKey(x, y))}
           class:start={x === start[0] && y === start[1]}
-          class:goal={x === goal[0] && y === goal[1]}
+          class:goal={x === end[0] && y === end[1]}
           class:path={path.some((tile) => tile[0] === x && tile[1] === y)}
           style="grid-column-start: {x + 1}; grid-row-start: {y + 1};"
           onmousedown={(event) => {

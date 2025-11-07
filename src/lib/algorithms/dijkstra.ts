@@ -37,8 +37,6 @@ const dijkstra = (
     queue.insert(tile, distance, key);
   }
 
-  console.log(distanceMap);
-
   while (!queue.isEmpty()) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const min = queue.extractMin()!;
@@ -80,10 +78,6 @@ const dijkstra = (
 
       const neighbourKey = getKey(neighbour.x, neighbour.y);
       const distance = currentDistance + 1;
-
-      if (neighbourKey === "0,0") {
-        console.log({ distance, current });
-      }
 
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (distance < distanceMap.get(neighbourKey)!) {
