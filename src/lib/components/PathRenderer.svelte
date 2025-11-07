@@ -36,6 +36,7 @@
   let toggled = new Set<CellKey>();
   // initial value doesn't matter
   let dragAction: DragAction = "add";
+  let path = $derived(dijkstra(start, goal, width, height, walls));
 
   function cellOnMouseDown(x: number, y: number, rightClick: boolean): void {
     mouseDown = true;
@@ -120,9 +121,6 @@
   onmouseup={() => {
     documentOnMouseUp();
   }}
-  onclick={() => {
-    console.log(dijkstra(start, goal, width, height, walls));
-  }}
 />
 
 <div class="container">
@@ -134,6 +132,7 @@
           class:wall={walls.has(getKey(x, y))}
           class:start={x === start[0] && y === start[1]}
           class:goal={x === goal[0] && y === goal[1]}
+          class:path={path.some((tile) => tile[0] === x && tile[1] === y)}
           style="grid-column-start: {x + 1}; grid-row-start: {y + 1};"
           onmousedown={(event) => {
             // event.button === 2 is a right click
@@ -172,6 +171,10 @@
 
       &.wall {
         background-color: #000;
+      }
+
+      &.path {
+        background-color: #888;
       }
 
       &.start {
