@@ -5,7 +5,8 @@
   import { createMaze } from "$lib/createMaze";
   import { SvelteSet } from "svelte/reactivity";
 
-  let walls = new SvelteSet<CellKey>();
+  // eslint-ignore svelte/no-unnecessary-state-wrap
+  let walls = $state(new SvelteSet<CellKey>());
   let width = $state(50);
   let height = $state(25);
   let start: [number, number] = $state([0, 0]);
