@@ -7,8 +7,9 @@
 </script>
 
 <script lang="ts">
-  import { createMaze } from "$lib/createMaze";
+  import { dijkstra } from "$lib/algorithms/dijkstra";
 
+  import { createMaze } from "$lib/createMaze";
   import { SvelteSet } from "svelte/reactivity";
 
   type Props = {
@@ -49,9 +50,8 @@
       dragAction = "add";
     }
 
-    toggled.add(getKey(x, y));
-
     cellOnMouseMove(x, y);
+    toggled.add(getKey(x, y));
   }
 
   function cellOnMouseMove(x: number, y: number): void {
@@ -119,6 +119,9 @@
 <svelte:document
   onmouseup={() => {
     documentOnMouseUp();
+  }}
+  onclick={() => {
+    console.log(dijkstra(start, goal, width, height, walls));
   }}
 />
 
