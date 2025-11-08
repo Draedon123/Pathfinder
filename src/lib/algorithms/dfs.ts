@@ -82,11 +82,13 @@ const dfs: PathfindingAlgorithm = function* (
         visited: visited.has(neighbourKey),
       };
 
-      yield {
-        path: reconstructPath(neighbourCell),
-        visited,
-        frontier,
-      };
+      if (!neighbourCell.visited) {
+        yield {
+          path: reconstructPath(neighbourCell),
+          visited,
+          frontier,
+        };
+      }
 
       frontier.add(neighbourKey);
       stack.push(neighbourCell);
