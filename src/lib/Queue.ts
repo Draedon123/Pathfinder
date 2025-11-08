@@ -11,12 +11,18 @@ class Queue<T> {
   }
 
   public enqueue(value: T): void {
-    const next = this.head;
-
-    this.head = {
+    const node = {
       value,
-      next,
+      next: null,
     };
+
+    const tail = this.tail;
+
+    if (tail === null) {
+      this.head = node;
+    } else {
+      tail.next = node;
+    }
   }
 
   public dequeue(): T | null {
@@ -28,6 +34,16 @@ class Queue<T> {
     this.head = this.head.next;
 
     return removed;
+  }
+
+  private get tail(): ListNode<T> | null {
+    let node = this.head;
+
+    while (node?.next) {
+      node = node.next;
+    }
+
+    return node;
   }
 
   public get empty(): boolean {
