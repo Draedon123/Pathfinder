@@ -1,5 +1,6 @@
 <script lang="ts">
   import { astar } from "$lib/algorithms/astar";
+  import { bfs } from "$lib/algorithms/bfs";
   import { dijkstra } from "$lib/algorithms/dijkstra";
   import PathRenderer, {
     type CellKey,
@@ -9,13 +10,17 @@
   import { SvelteSet } from "svelte/reactivity";
 
   const PATHFINDING_ALGORITHMS = {
-    dijkstra: {
-      name: "Dijkstra's Algorithm",
-      algorithm: dijkstra,
-    },
     astar: {
       name: "A*",
       algorithm: astar,
+    },
+    bfs: {
+      name: "Breadth-first Search",
+      algorithm: bfs,
+    },
+    dijkstra: {
+      name: "Dijkstra's Algorithm",
+      algorithm: dijkstra,
     },
   } as const satisfies Record<
     string,

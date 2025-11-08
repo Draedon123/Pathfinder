@@ -1,7 +1,7 @@
 import { SvelteSet } from "svelte/reactivity";
 import { getKey, type CellKey } from "./components/PathRenderer.svelte";
 import { OrderedSet } from "./OrderedSet";
-import { dijkstra } from "./algorithms/dijkstra";
+import { astar } from "./algorithms/astar";
 
 type Cell = {
   x: number;
@@ -110,14 +110,16 @@ function createMaze(
 
   // hack to ensure the maze is always solvable...
   // wouldn't need this if the width and height were guaranteed to be odd
-  const pathLength = dijkstra(
-    start,
-    end,
-    originalWidth,
-    originalHeight,
-    walls
-  ).length;
-  if (pathLength <= 1) {
+  const generator = astar(start, end, originalWidth, originalHeight, walls);
+
+  let next = generator.next();
+  let path: Pair<number>[] = [];
+  while (!next.done) {
+    path = next.value.path;
+    next = generator.next();
+  }
+
+  if (path.length <= 1) {
     return createMaze(originalWidth, originalHeight, start, end);
   }
 
