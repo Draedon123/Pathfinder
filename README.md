@@ -11,3 +11,4 @@
 - https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
 - https://en.wikipedia.org/wiki/A*_search_algorithm
 - https://en.wikipedia.org/wiki/Breadth-first_search
+- https://en.wikipedia.org/wiki/Depth-first_search

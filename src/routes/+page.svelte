@@ -1,6 +1,7 @@
 <script lang="ts">
   import { astar } from "$lib/algorithms/astar";
   import { bfs } from "$lib/algorithms/bfs";
+  import { dfs } from "$lib/algorithms/dfs";
   import { dijkstra } from "$lib/algorithms/dijkstra";
   import PathRenderer, {
     type CellKey,
@@ -17,6 +18,10 @@
     bfs: {
       name: "Breadth-first Search",
       algorithm: bfs,
+    },
+    dfs: {
+      name: "Depth-first Search",
+      algorithm: dfs,
     },
     dijkstra: {
       name: "Dijkstra's Algorithm",

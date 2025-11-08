@@ -86,7 +86,7 @@
       } else {
         $visualisationData = newPath.value;
       }
-    }, 10);
+    }, 50);
   }
 
   export function stopVisualisation(): void {
