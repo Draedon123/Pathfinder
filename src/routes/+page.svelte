@@ -71,6 +71,23 @@
   <h1>Pathfinder</h1>
 
   <div class="centre" style="left: -8px; position: relative;">
+    <div>
+      <details>
+        <summary>
+          <h2 style="display: inline;">Guide</h2>
+        </summary>
+        <ul>
+          <li>
+            Left click and drag on the green and red squares (start and end
+            respectively) to move them
+          </li>
+          <li>Left click and drag on the grid to place walls</li>
+          <li>Right click and drag on the grid to delete walls</li>
+          <li>Note that dragging too fast will skip grid cells</li>
+        </ul>
+      </details>
+    </div>
+
     <div class="path-container">
       <PathRenderer
         {width}
@@ -139,11 +156,11 @@
 
   main {
     width: 100vw;
-    height: 100vh;
+    min-height: 100vh;
 
     padding: 8px;
 
-    overflow: hidden scroll;
+    overflow-x: hidden;
     background: radial-gradient(
       circle,
       rgba(249, 82, 255, 0.4) 0%,
@@ -151,10 +168,12 @@
     );
 
     color: #fff;
+    font-size: large;
     font-family: "Rubik";
   }
 
-  h1 {
+  h1,
+  h2 {
     text-align: center;
     margin-bottom: 0;
     margin-top: 5px;
@@ -210,5 +229,33 @@
     width: max-content;
     padding: 0.675em 6em 0.675em 1em;
     border-radius: 5px;
+  }
+
+  details {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    &[open] summary:before {
+      content: "▼";
+    }
+
+    summary {
+      list-style: none;
+
+      display: flex;
+      align-items: center;
+      width: min-content;
+
+      cursor: pointer;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      &::before {
+        content: "►";
+      }
+    }
   }
 </style>

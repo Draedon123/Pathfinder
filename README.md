@@ -14,3 +14,4 @@
 - https://en.wikipedia.org/wiki/Depth-first_search
 - https://fonts.google.com/specimen/Rubik
 - https://blog.logrocket.com/creating-custom-select-dropdown-css/
+- https://stackoverflow.com/a/56758842
