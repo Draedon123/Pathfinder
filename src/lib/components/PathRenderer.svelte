@@ -39,7 +39,7 @@
     start = $bindable([0, 0]),
     end = $bindable([width - 1, height - 1]),
     walls = $bindable(createMaze(width, height, start, end)),
-    pathfindingAlgorithm: algorithm = astar,
+    pathfindingAlgorithm: algorithm = $bindable(astar),
   }: Props = $props();
 
   let mouseDown = false;
@@ -47,33 +47,43 @@
   let toggled = new Set<CellKey>();
   // initial value doesn't matter
   let dragAction: DragAction = "add";
-  let pathGenerator = $derived(
-    (() => {
-      // hack to ensure update when walls changes... idk why i need this
-      walls.size;
-      return algorithm(start, end, width, height, walls);
-    })()
-  );
   let path: [number, number][] = $state([]);
   let intervalHandle: NodeJS.Timeout | null = null;
 
-  $effect(() => {
+  let visualisationStarted = false;
+  export function startVisualisation(onlyUpdate: boolean = false): void {
+    if (visualisationStarted) {
+      path = [];
+    }
+
+    if (onlyUpdate && !visualisationStarted) {
+      return;
+    }
+
+    visualisationStarted = true;
+    const pathGenerator = algorithm(start, end, width, height, walls);
+
     if (intervalHandle !== null) {
       clearInterval(intervalHandle);
     }
 
     intervalHandle = setInterval(() => {
       const newPath = pathGenerator.next();
-      path = pathGenerator.next().value as Pair<number>[];
 
       if (newPath.done) {
         clearInterval(intervalHandle as NodeJS.Timeout);
         intervalHandle = null;
+      } else {
+        path = newPath.value as Pair<number>[];
       }
-    }, 10);
-  });
+    }, 5);
+  }
 
   function cellOnMouseDown(x: number, y: number, rightClick: boolean): void {
+    if (visualisationStarted) {
+      return;
+    }
+
     mouseDown = true;
 
     if (rightClick) {
@@ -93,6 +103,7 @@
   function cellOnMouseMove(x: number, y: number): void {
     const key = getKey(x, y);
     if (
+      visualisationStarted ||
       !mouseDown ||
       (x === start[0] && y === start[1]) ||
       (x === end[0] && y === end[1])
@@ -135,6 +146,10 @@
   }
 
   function cellOnMouseUp(x: number, y: number): void {
+    if (visualisationStarted) {
+      return;
+    }
+
     switch (dragAction) {
       case "movestart":
       // fallthrough
@@ -147,6 +162,10 @@
   }
 
   function documentOnMouseUp(): void {
+    if (visualisationStarted) {
+      return;
+    }
+
     mouseDown = false;
     toggled.clear();
   }
@@ -215,7 +234,7 @@
       }
 
       &.path {
-        background-color: #888;
+        background-color: #00f;
       }
 
       &.start {

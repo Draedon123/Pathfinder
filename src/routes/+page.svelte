@@ -28,16 +28,19 @@
   let height = $state(25);
   let start: Pair<number> = $state([0, 0]);
   let end: Pair<number> = $state([49, 24]);
+  let renderer: PathRenderer;
 
   let algorithmName: keyof typeof PATHFINDING_ALGORITHMS = $state("astar");
   let algorithm = $derived(PATHFINDING_ALGORITHMS[algorithmName].algorithm);
 
   function clear(): void {
     walls.clear();
+    renderer.startVisualisation(true);
   }
 
   function generateMaze(): void {
     walls = createMaze(width, height, start, end);
+    renderer.startVisualisation(true);
   }
 </script>
 
@@ -56,7 +59,8 @@
         bind:start
         bind:end
         bind:walls
-        pathfindingAlgorithm={algorithm}
+        bind:pathfindingAlgorithm={algorithm}
+        bind:this={renderer}
       />
     </div>
 
@@ -65,13 +69,22 @@
       <button onclick={generateMaze}>Generate Maze</button>
     </div>
 
-    <select bind:value={algorithmName}>
+    <select
+      bind:value={algorithmName}
+      onchange={() => {
+        renderer.startVisualisation(true);
+      }}
+    >
       {#each Object.entries(PATHFINDING_ALGORITHMS) as [key, algorithm] (key)}
-        <option value={key} selected={key === algorithmName}
-          >{algorithm.name}</option
-        >
+        <option value={key}>{algorithm.name}</option>
       {/each}
     </select>
+
+    <button
+      onclick={() => {
+        renderer.startVisualisation();
+      }}>Start</button
+    >
   </div>
 </main>
 
