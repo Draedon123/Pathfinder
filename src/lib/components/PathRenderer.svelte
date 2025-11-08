@@ -263,6 +263,8 @@
       box-sizing: border-box;
       user-select: none;
 
+      background-color: #ddd;
+
       &.visited {
         background-color: #888;
       }

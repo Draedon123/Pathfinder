@@ -12,3 +12,5 @@
 - https://en.wikipedia.org/wiki/A*_search_algorithm
 - https://en.wikipedia.org/wiki/Breadth-first_search
 - https://en.wikipedia.org/wiki/Depth-first_search
+- https://fonts.google.com/specimen/Rubik
+- https://blog.logrocket.com/creating-custom-select-dropdown-css/

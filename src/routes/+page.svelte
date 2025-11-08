@@ -58,6 +58,13 @@
 
 <svelte:head>
   <title>Pathfinder</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap"
+    rel="stylesheet"
+  />
 </svelte:head>
 
 <main>
@@ -111,10 +118,22 @@
 <style lang="scss">
   :global(body) {
     margin: 0;
+    overflow-x: hidden;
 
-    scrollbar-width: 0;
     &::-webkit-scrollbar {
-      display: none;
+      width: 1.2ch;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #ebcffa;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #888;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: #666;
     }
   }
 
@@ -125,10 +144,20 @@
     padding: 8px;
 
     overflow: hidden scroll;
+    background: radial-gradient(
+      circle,
+      rgba(249, 82, 255, 0.4) 0%,
+      rgba(115, 55, 204, 0.4) 100%
+    );
+
+    color: #fff;
+    font-family: "Rubik";
   }
 
   h1 {
     text-align: center;
+    margin-bottom: 0;
+    margin-top: 5px;
   }
 
   .centre {
@@ -137,10 +166,49 @@
     align-items: center;
 
     width: 100%;
+
+    div {
+      margin: 0.5em 0;
+    }
   }
 
   .path-container {
     width: 85vw;
-    padding-bottom: 2em;
+    margin-bottom: 2em;
+
+    box-shadow: #c287c2 0 7px 29px;
+  }
+
+  button,
+  select {
+    border: 1px solid #1c7cac;
+
+    color: white;
+    font-family: "Rubik";
+
+    background-color: #26acef;
+    transition:
+      background-color 0.25s,
+      border-color 0.25s;
+
+    cursor: pointer;
+
+    &:hover {
+      background-color: #2396cf;
+      border-color: #1a77a5;
+    }
+  }
+
+  button {
+    height: 2em;
+    font-size: large;
+    border-radius: 15px;
+  }
+
+  select {
+    appearance: none;
+    width: max-content;
+    padding: 0.675em 6em 0.675em 1em;
+    border-radius: 5px;
   }
 </style>
