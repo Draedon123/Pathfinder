@@ -148,4 +148,4 @@ const astarManhattan: PathfindingAlgorithm = (
   walls
 ) => astar(manhattanDistance, start, end, width, height, walls);
 
-export { astarEuclidean, astarManhattan };
+export { astar, astarEuclidean, astarManhattan };

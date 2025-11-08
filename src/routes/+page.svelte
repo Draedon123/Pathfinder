@@ -3,6 +3,7 @@
   import { bfs } from "$lib/algorithms/bfs";
   import { dfs } from "$lib/algorithms/dfs";
   import { dijkstra } from "$lib/algorithms/dijkstra";
+  import { ucs } from "$lib/algorithms/ucs";
   import PathRenderer, {
     type CellKey,
     type PathfindingAlgorithm,
@@ -31,6 +32,10 @@
     dijkstra: {
       name: "Dijkstra's Algorithm",
       algorithm: dijkstra,
+    },
+    ucs: {
+      name: "Uniform Cost Search",
+      algorithm: ucs,
     },
   } as const satisfies Record<
     string,
