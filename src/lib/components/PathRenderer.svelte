@@ -26,6 +26,7 @@
   import { createMaze } from "$lib/createMaze";
   import { onDestroy } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
+  import { writable } from "svelte/store";
 
   type Props = {
     width: number;
@@ -53,19 +54,21 @@
   let toggled = new Set<CellKey>();
   // initial value doesn't matter
   let dragAction: DragAction = "add";
-  let path: [number, number][] = $state([]);
-  // svelte-ignore non_reactive_update
-  let visited = new SvelteSet<CellKey>();
-  // svelte-ignore non_reactive_update
-  let frontier = new SvelteSet<CellKey>();
+  let visualisationData = writable({
+    path: [] as [number, number][],
+    visited: new SvelteSet<CellKey>(),
+    frontier: new SvelteSet<CellKey>(),
+  });
   let intervalHandle: NodeJS.Timeout | null = null;
 
   let visualisationStarted = false;
   export function startVisualisation(onlyUpdate: boolean = false): void {
     if (visualisationStarted) {
-      path = [];
-      visited.clear();
-      frontier.clear();
+      $visualisationData = {
+        path: [],
+        visited: new SvelteSet<CellKey>(),
+        frontier: new SvelteSet<CellKey>(),
+      };
     }
 
     if (onlyUpdate && !visualisationStarted) {
@@ -86,16 +89,18 @@
         clearInterval(intervalHandle as NodeJS.Timeout);
         intervalHandle = null;
       } else {
-        path = newPath.value.path;
-        visited = newPath.value.visited;
-        frontier = newPath.value.frontier;
+        $visualisationData = newPath.value;
       }
-    }, 5);
+    }, 10);
   }
 
   export function stopVisualisation(): void {
     visualisationStarted = false;
-    path = [];
+    $visualisationData = {
+      path: [],
+      visited: new SvelteSet<CellKey>(),
+      frontier: new SvelteSet<CellKey>(),
+    };
 
     if (intervalHandle !== null) {
       clearInterval(intervalHandle);
@@ -216,9 +221,11 @@
           class:wall={walls.has(key)}
           class:start={x === start[0] && y === start[1]}
           class:goal={x === end[0] && y === end[1]}
-          class:path={path.some((tile) => tile[0] === x && tile[1] === y)}
-          class:visited={visited.has(key)}
-          class:frontier={frontier.has(key)}
+          class:path={$visualisationData.path.some(
+            (tile) => tile[0] === x && tile[1] === y
+          )}
+          class:visited={$visualisationData.visited.has(key)}
+          class:frontier={$visualisationData.frontier.has(key)}
           style="grid-column-start: {x + 1}; grid-row-start: {y + 1};"
           onmousedown={(event) => {
             // event.button === 2 is a right click
