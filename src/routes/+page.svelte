@@ -35,11 +35,13 @@
 
   function clear(): void {
     walls.clear();
+    renderer.clearVisualisation();
     renderer.startVisualisation(true);
   }
 
   function generateMaze(): void {
     walls = createMaze(width, height, start, end);
+    renderer.clearVisualisation();
     renderer.startVisualisation(true);
   }
 </script>
@@ -72,6 +74,7 @@
     <select
       bind:value={algorithmName}
       onchange={() => {
+        renderer.clearVisualisation();
         renderer.startVisualisation(true);
       }}
     >

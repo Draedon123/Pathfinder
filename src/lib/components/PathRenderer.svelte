@@ -21,8 +21,6 @@
 </script>
 
 <script lang="ts">
-  import { astar } from "$lib/algorithms/astar";
-
   import { createMaze } from "$lib/createMaze";
   import { onDestroy } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
@@ -34,7 +32,7 @@
     walls?: SvelteSet<CellKey>;
     start?: Pair<number>;
     end?: Pair<number>;
-    pathfindingAlgorithm?: PathfindingAlgorithm;
+    pathfindingAlgorithm: PathfindingAlgorithm;
   };
 
   export type CellKey = `${number},${number}`;
@@ -46,7 +44,7 @@
     start = $bindable([0, 0]),
     end = $bindable([width - 1, height - 1]),
     walls = $bindable(createMaze(width, height, start, end)),
-    pathfindingAlgorithm: algorithm = $bindable(astar),
+    pathfindingAlgorithm: algorithm = $bindable(),
   }: Props = $props();
 
   let mouseDown = false;
@@ -64,11 +62,7 @@
   let visualisationStarted = false;
   export function startVisualisation(onlyUpdate: boolean = false): void {
     if (visualisationStarted) {
-      $visualisationData = {
-        path: [],
-        visited: new SvelteSet<CellKey>(),
-        frontier: new SvelteSet<CellKey>(),
-      };
+      clearVisualisation();
     }
 
     if (onlyUpdate && !visualisationStarted) {
@@ -88,6 +82,7 @@
       if (newPath.done) {
         clearInterval(intervalHandle as NodeJS.Timeout);
         intervalHandle = null;
+        visualisationStarted = false;
       } else {
         $visualisationData = newPath.value;
       }
@@ -96,21 +91,27 @@
 
   export function stopVisualisation(): void {
     visualisationStarted = false;
-    $visualisationData = {
-      path: [],
-      visited: new SvelteSet<CellKey>(),
-      frontier: new SvelteSet<CellKey>(),
-    };
+    clearVisualisation();
 
     if (intervalHandle !== null) {
       clearInterval(intervalHandle);
     }
   }
 
+  export function clearVisualisation(): void {
+    $visualisationData = {
+      path: [],
+      visited: new SvelteSet<CellKey>(),
+      frontier: new SvelteSet<CellKey>(),
+    };
+  }
+
   function cellOnMouseDown(x: number, y: number, rightClick: boolean): void {
     if (visualisationStarted) {
       return;
     }
+
+    clearVisualisation();
 
     mouseDown = true;
 
@@ -262,10 +263,6 @@
       box-sizing: border-box;
       user-select: none;
 
-      &.wall {
-        background-color: #000;
-      }
-
       &.visited {
         background-color: #888;
       }
@@ -276,6 +273,10 @@
 
       &.path {
         background-color: #00f;
+      }
+
+      &.wall {
+        background-color: #000;
       }
 
       &.start {
