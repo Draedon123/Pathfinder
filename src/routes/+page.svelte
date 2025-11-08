@@ -80,11 +80,18 @@
       {/each}
     </select>
 
-    <button
-      onclick={() => {
-        renderer.startVisualisation();
-      }}>Start</button
-    >
+    <div>
+      <button
+        onclick={() => {
+          renderer.startVisualisation();
+        }}>Start</button
+      >
+      <button
+        onclick={() => {
+          renderer.stopVisualisation();
+        }}>Stop</button
+      >
+    </div>
   </div>
 </main>
 

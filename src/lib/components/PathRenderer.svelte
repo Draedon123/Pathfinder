@@ -79,6 +79,15 @@
     }, 5);
   }
 
+  export function stopVisualisation(): void {
+    visualisationStarted = false;
+    path = [];
+
+    if (intervalHandle !== null) {
+      clearInterval(intervalHandle);
+    }
+  }
+
   function cellOnMouseDown(x: number, y: number, rightClick: boolean): void {
     if (visualisationStarted) {
       return;
