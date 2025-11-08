@@ -1,8 +1,8 @@
 import { SvelteSet } from "svelte/reactivity";
 import { getKey, type CellKey } from "./components/PathRenderer.svelte";
 import { OrderedSet } from "./OrderedSet";
-import { astar } from "./algorithms/astar";
 import { add, equal, scale, type Point } from "./point";
+import { astarEuclidean } from "./algorithms/astar";
 
 type Cell = Point & {
   isWall: boolean;
@@ -104,7 +104,13 @@ function createMaze(
 
   // hack to ensure the maze is always solvable...
   // wouldn't need this if the width and height were guaranteed to be odd
-  const generator = astar(start, end, originalWidth, originalHeight, walls);
+  const generator = astarEuclidean(
+    start,
+    end,
+    originalWidth,
+    originalHeight,
+    walls
+  );
 
   let next = generator.next();
   let path: Point[] = [];

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { astar } from "$lib/algorithms/astar";
+  import { astarEuclidean, astarManhattan } from "$lib/algorithms/astar";
   import { bfs } from "$lib/algorithms/bfs";
   import { dfs } from "$lib/algorithms/dfs";
   import { dijkstra } from "$lib/algorithms/dijkstra";
@@ -12,9 +12,13 @@
   import { SvelteSet } from "svelte/reactivity";
 
   const PATHFINDING_ALGORITHMS = {
-    astar: {
-      name: "A*",
-      algorithm: astar,
+    astarEuclidean: {
+      name: "A* (Euclidean Heuristic)",
+      algorithm: astarEuclidean,
+    },
+    astarManhattan: {
+      name: "A* (Manhattan Heuristic)",
+      algorithm: astarManhattan,
     },
     bfs: {
       name: "Breadth-first Search",
@@ -41,7 +45,8 @@
   let end: Point = $state({ x: 49, y: 24 });
   let renderer: PathRenderer;
 
-  let algorithmName: keyof typeof PATHFINDING_ALGORITHMS = $state("astar");
+  let algorithmName: keyof typeof PATHFINDING_ALGORITHMS =
+    $state("astarEuclidean");
   let algorithm = $derived(PATHFINDING_ALGORITHMS[algorithmName].algorithm);
 
   function clear(): void {

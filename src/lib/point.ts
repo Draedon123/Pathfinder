@@ -32,4 +32,24 @@ function magnitude(point: Point): number {
   return Math.hypot(point.x, point.y);
 }
 
-export { type Point, add, subtract, scale, equal, magnitude };
+function abs(point: Point): Point {
+  return {
+    x: Math.abs(point.x),
+    y: Math.abs(point.y),
+  };
+}
+
+function sumComponents(point: Point): number {
+  return point.x + point.y;
+}
+
+export {
+  type Point,
+  add,
+  subtract,
+  scale,
+  equal,
+  magnitude,
+  abs,
+  sumComponents,
+};

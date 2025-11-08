@@ -5,12 +5,20 @@ import {
   type AlgorithmStep,
 } from "$lib/components/PathRenderer.svelte";
 import { MinPriorityQueue } from "$lib/MinPriorityQueue";
-import { equal, magnitude, subtract, type Point } from "$lib/point";
+import {
+  abs,
+  equal,
+  magnitude,
+  subtract,
+  sumComponents,
+  type Point,
+} from "$lib/point";
 import { SvelteSet } from "svelte/reactivity";
 
 type Heuristic = (start: Point, end: Point) => number;
 
-const astar: PathfindingAlgorithm = function* (
+const astar = function* (
+  heuristic: Heuristic,
   start: Point,
   end: Point,
   width: number,
@@ -22,7 +30,7 @@ const astar: PathfindingAlgorithm = function* (
   const visited = new SvelteSet<CellKey>();
   const gScores = new Map<CellKey, number>();
 
-  const startHScore = euclideanDistance(start, end);
+  const startHScore = heuristic(start, end);
   const startKey = getKey(start);
 
   openSet.insert(start, 0 + startHScore, startKey);
@@ -77,7 +85,7 @@ const astar: PathfindingAlgorithm = function* (
       const currentG = gScores.get(currentKey) as number;
       const tentativeGScore = currentG + 1;
       if (tentativeGScore < (gScores.get(neighbourKey) as number)) {
-        const fScore = tentativeGScore + euclideanDistance(neighbour, end);
+        const fScore = tentativeGScore + heuristic(neighbour, end);
 
         previousMap.set(neighbourKey, current);
         gScores.set(neighbourKey, tentativeGScore);
@@ -122,4 +130,22 @@ function reconstructPath(
 const euclideanDistance: Heuristic = (start, end) =>
   magnitude(subtract(end, start));
 
-export { astar };
+const manhattanDistance: Heuristic = (start, end) =>
+  sumComponents(abs(subtract(end, start)));
+
+const astarEuclidean: PathfindingAlgorithm = (
+  start,
+  end,
+  width,
+  height,
+  walls
+) => astar(euclideanDistance, start, end, width, height, walls);
+const astarManhattan: PathfindingAlgorithm = (
+  start,
+  end,
+  width,
+  height,
+  walls
+) => astar(manhattanDistance, start, end, width, height, walls);
+
+export { astarEuclidean, astarManhattan };

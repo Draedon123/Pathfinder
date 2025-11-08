@@ -91,6 +91,7 @@
         clearInterval(intervalHandle as NodeJS.Timeout);
         intervalHandle = null;
         visualisationStarted = false;
+        console.log(`Path was ${$visualisationData.path.length} cells long`);
       } else {
         $visualisationData = newPath.value;
       }
