@@ -9,7 +9,7 @@
     width: number,
     height: number,
     walls: SvelteSet<CellKey>
-  ) => Pair<number>[];
+  ) => Generator<Pair<number>[], void, void>;
 
   export { getKey, type PathfindingAlgorithm };
 </script>
@@ -18,6 +18,7 @@
   import { astar } from "$lib/algorithms/astar";
 
   import { createMaze } from "$lib/createMaze";
+  import { onDestroy } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
 
   type Props = {
@@ -46,7 +47,31 @@
   let toggled = new Set<CellKey>();
   // initial value doesn't matter
   let dragAction: DragAction = "add";
-  let path = $derived(algorithm(start, end, width, height, walls));
+  let pathGenerator = $derived(
+    (() => {
+      // hack to ensure update when walls changes... idk why i need this
+      walls.size;
+      return algorithm(start, end, width, height, walls);
+    })()
+  );
+  let path: [number, number][] = $state([]);
+  let intervalHandle: NodeJS.Timeout | null = null;
+
+  $effect(() => {
+    if (intervalHandle !== null) {
+      clearInterval(intervalHandle);
+    }
+
+    intervalHandle = setInterval(() => {
+      const newPath = pathGenerator.next();
+      path = pathGenerator.next().value as Pair<number>[];
+
+      if (newPath.done) {
+        clearInterval(intervalHandle as NodeJS.Timeout);
+        intervalHandle = null;
+      }
+    }, 10);
+  });
 
   function cellOnMouseDown(x: number, y: number, rightClick: boolean): void {
     mouseDown = true;
@@ -125,6 +150,12 @@
     mouseDown = false;
     toggled.clear();
   }
+
+  onDestroy(() => {
+    if (intervalHandle !== null) {
+      clearInterval(intervalHandle);
+    }
+  });
 </script>
 
 <svelte:document

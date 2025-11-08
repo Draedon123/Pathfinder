@@ -8,13 +8,13 @@ import type { SvelteSet } from "svelte/reactivity";
 
 type Heuristic = (start: Pair<number>, end: Pair<number>) => number;
 
-const astar: PathfindingAlgorithm = (
+const astar: PathfindingAlgorithm = function* (
   start: Pair<number>,
   end: Pair<number>,
   width: number,
   height: number,
   walls: SvelteSet<CellKey>
-): Pair<number>[] => {
+): Generator<Pair<number>[], void, void> {
   const openSet = new MinPriorityQueue<Pair<number>>();
   const previousMap = new Map<CellKey, Pair<number>>();
   const gScores = new Map<CellKey, number>();
@@ -42,7 +42,8 @@ const astar: PathfindingAlgorithm = (
     const current = openSet.extractMin()!.value;
 
     if (current[0] === end[0] && current[1] === end[1]) {
-      return reconstructPath(previousMap, current);
+      yield reconstructPath(previousMap, current);
+      return;
     }
 
     const currentKey = getKey(current[0], current[1]);
@@ -81,15 +82,17 @@ const astar: PathfindingAlgorithm = (
         if (!openSet.has(neighbourKey)) {
           openSet.insert(neighbour, fScore, neighbourKey);
         }
+
+        yield reconstructPath(previousMap, neighbour);
       }
     }
   }
 
-  return [start];
+  yield [start];
 };
 
 function reconstructPath(
-  previousMap: Map<CellKey, Pair<number> | null>,
+  previousMap: Map<CellKey, Pair<number>>,
   current: Pair<number>
 ): Pair<number>[] {
   const path: Pair<number>[] = [current];

@@ -12,17 +12,16 @@ type Cell = {
   isWall: boolean;
 };
 
-const dijkstra: PathfindingAlgorithm = (
+const dijkstra: PathfindingAlgorithm = function* (
   start: Pair<number>,
   end: Pair<number>,
   width: number,
   height: number,
   walls: SvelteSet<CellKey>
-): Pair<number>[] => {
-  const path: Pair<number>[] = [];
+): Generator<Pair<number>[], void, void> {
   const queue = new MinPriorityQueue<Cell>();
   const distanceMap = new Map<CellKey, number>();
-  const previousMap = new Map<CellKey, CellKey | null>();
+  const previousMap = new Map<CellKey, Pair<number>>();
   const visisted = new Set<CellKey>();
   const tiles = Array.from({ length: height }, (_, y) =>
     Array.from({ length: width }, (_, x) => ({
@@ -37,7 +36,6 @@ const dijkstra: PathfindingAlgorithm = (
     const key = getKey(tile.x, tile.y);
 
     distanceMap.set(key, distance);
-    previousMap.set(key, null);
     queue.insert(tile, distance, key);
   }
 
@@ -86,30 +84,29 @@ const dijkstra: PathfindingAlgorithm = (
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (distance < distanceMap.get(neighbourKey)!) {
         distanceMap.set(neighbourKey, distance);
-        previousMap.set(neighbourKey, currentKey);
+        previousMap.set(neighbourKey, [current.x, current.y]);
         queue.decreasePriority(neighbourKey, distance);
+
+        yield reconstructPath(previousMap, [neighbour.x, neighbour.y]);
       }
     }
   }
 
-  let current = getKey(
-    tiles[end[0] + width * end[1]].x,
-    tiles[end[0] + width * end[1]].y
-  );
+  yield reconstructPath(previousMap, end);
+};
 
-  while (current) {
-    const [x, y] = current.split(",").map((value) => parseInt(value));
-    path.unshift([x, y]);
-    const previous = previousMap.get(current);
-
-    if (!previous) {
-      break;
-    }
-
-    current = previous;
+function reconstructPath(
+  previousMap: Map<CellKey, Pair<number>>,
+  current: Pair<number>
+): Pair<number>[] {
+  const path: Pair<number>[] = [current];
+  while (previousMap.has(getKey(current[0], current[1]))) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    current = previousMap.get(getKey(current[0], current[1]))!;
+    path.unshift(current);
   }
 
   return path;
-};
+}
 
 export { dijkstra };
