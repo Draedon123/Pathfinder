@@ -27,10 +27,6 @@ class MinPriorityQueue<T> {
     this.indexMap.set(this.data[j].key, j);
   }
 
-  public peek(): QueueNode<T> {
-    return this.data[0];
-  }
-
   public insert(value: T, priority: number, key: string): void {
     if (this.indexMap.has(key)) {
       this.decreasePriority(key, priority);

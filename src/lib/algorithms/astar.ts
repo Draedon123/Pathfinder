@@ -5,25 +5,25 @@ import {
   type AlgorithmStep,
 } from "$lib/components/PathRenderer.svelte";
 import { MinPriorityQueue } from "$lib/MinPriorityQueue";
+import { equal, magnitude, subtract, type Point } from "$lib/point";
 import { SvelteSet } from "svelte/reactivity";
 
-type Heuristic = (start: Pair<number>, end: Pair<number>) => number;
+type Heuristic = (start: Point, end: Point) => number;
 
 const astar: PathfindingAlgorithm = function* (
-  start: Pair<number>,
-  end: Pair<number>,
+  start: Point,
+  end: Point,
   width: number,
   height: number,
   walls: SvelteSet<CellKey>
 ): Generator<AlgorithmStep, void, void> {
-  const openSet = new MinPriorityQueue<Pair<number>>();
-  const previousMap = new Map<CellKey, Pair<number>>();
+  const openSet = new MinPriorityQueue<Point>();
+  const previousMap = new Map<CellKey, Point>();
   const visited = new SvelteSet<CellKey>();
   const gScores = new Map<CellKey, number>();
-  const fScores = new Map<CellKey, number>();
 
   const startHScore = euclideanDistance(start, end);
-  const startKey = getKey(start[0], start[1]);
+  const startKey = getKey(start);
 
   openSet.insert(start, 0 + startHScore, startKey);
 
@@ -32,48 +32,43 @@ const astar: PathfindingAlgorithm = function* (
       const key = getKey(x, y);
 
       gScores.set(key, Infinity);
-      fScores.set(key, Infinity);
     }
   }
 
   gScores.set(startKey, 0);
-  fScores.set(startKey, startHScore);
 
   while (!openSet.isEmpty()) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const current = openSet.extractMin()!.value;
 
-    if (current[0] === end[0] && current[1] === end[1]) {
+    if (equal(current, end)) {
       yield {
         path: reconstructPath(previousMap, current),
         visited,
-        frontier: new SvelteSet(
-          openSet.data.map((node) => getKey(node.value[0], node.value[1]))
-        ),
+        frontier: new SvelteSet(openSet.data.map((node) => getKey(node.value))),
       };
       return;
     }
 
-    const currentKey = getKey(current[0], current[1]);
+    const currentKey = getKey(current);
     openSet.delete(currentKey);
     visited.add(currentKey);
 
-    const neighbours: Pair<number>[] = [
-      [current[0] + 1, current[1]],
-      [current[0] - 1, current[1]],
-      [current[0], current[1] + 1],
-      [current[0], current[1] - 1],
+    const neighbours: Point[] = [
+      { x: current.x + 1, y: current.y },
+      { x: current.x - 1, y: current.y },
+      { x: current.x, y: current.y + 1 },
+      { x: current.x, y: current.y - 1 },
     ];
 
     for (const neighbour of neighbours) {
-      const [x, y] = neighbour;
-      const neighbourKey = getKey(x, y);
+      const neighbourKey = getKey(neighbour);
 
       if (
-        x < 0 ||
-        y < 0 ||
-        x >= width ||
-        y >= height ||
+        neighbour.x < 0 ||
+        neighbour.y < 0 ||
+        neighbour.x >= width ||
+        neighbour.y >= height ||
         walls.has(neighbourKey)
       ) {
         continue;
@@ -86,7 +81,6 @@ const astar: PathfindingAlgorithm = function* (
 
         previousMap.set(neighbourKey, current);
         gScores.set(neighbourKey, tentativeGScore);
-        fScores.set(neighbourKey, fScore);
 
         if (!openSet.has(neighbourKey)) {
           openSet.insert(neighbour, fScore, neighbourKey);
@@ -96,7 +90,7 @@ const astar: PathfindingAlgorithm = function* (
           path: reconstructPath(previousMap, neighbour),
           visited,
           frontier: new SvelteSet(
-            openSet.data.map((node) => getKey(node.value[0], node.value[1]))
+            openSet.data.map((node) => getKey(node.value))
           ),
         };
       }
@@ -106,21 +100,19 @@ const astar: PathfindingAlgorithm = function* (
   yield {
     path: [start],
     visited,
-    frontier: new SvelteSet(
-      openSet.data.map((node) => getKey(node.value[0], node.value[1]))
-    ),
+    frontier: new SvelteSet(openSet.data.map((node) => getKey(node.value))),
   };
 };
 
 function reconstructPath(
-  previousMap: Map<CellKey, Pair<number>>,
-  current: Pair<number>
-): Pair<number>[] {
-  const path: Pair<number>[] = [current];
+  previousMap: Map<CellKey, Point>,
+  current: Point
+): Point[] {
+  const path: Point[] = [current];
 
-  while (previousMap.has(getKey(current[0], current[1]))) {
+  while (previousMap.has(getKey(current))) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    current = previousMap.get(getKey(current[0], current[1]))!;
+    current = previousMap.get(getKey(current))!;
     path.unshift(current);
   }
 
@@ -128,6 +120,6 @@ function reconstructPath(
 }
 
 const euclideanDistance: Heuristic = (start, end) =>
-  Math.hypot(end[0] - start[0], end[1] - start[1]);
+  magnitude(subtract(end, start));
 
 export { astar };

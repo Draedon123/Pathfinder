@@ -4,19 +4,18 @@ import {
   type CellKey,
   type PathfindingAlgorithm,
 } from "$lib/components/PathRenderer.svelte";
+import { equal, type Point } from "$lib/point";
 import { Queue } from "$lib/Queue";
 import { SvelteSet } from "svelte/reactivity";
 
-type Cell = {
-  x: number;
-  y: number;
+type Cell = Point & {
   visited: boolean;
   parent: Cell | null;
 };
 
 const bfs: PathfindingAlgorithm = function* (
-  start: Pair<number>,
-  end: Pair<number>,
+  start: Point,
+  end: Point,
   width: number,
   height: number,
   walls: SvelteSet<CellKey>
@@ -26,20 +25,19 @@ const bfs: PathfindingAlgorithm = function* (
   const frontier = new SvelteSet<CellKey>();
 
   const startCell: Cell = {
-    x: start[0],
-    y: start[1],
     visited: true,
     parent: null,
+    ...start,
   };
 
   queue.enqueue(startCell);
-  visited.add(getKey(start[0], start[1]));
+  visited.add(getKey(start));
 
   while (!queue.empty) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const cell = queue.dequeue()!;
 
-    if (cell.x === end[0] && cell.y === end[1]) {
+    if (equal(cell, end)) {
       yield {
         path: reconstructPath(cell),
         visited,
@@ -49,7 +47,7 @@ const bfs: PathfindingAlgorithm = function* (
       return;
     }
 
-    frontier.delete(getKey(cell.x, cell.y));
+    frontier.delete(getKey(cell));
 
     const neighbours = [
       [cell.x + 1, cell.y],
@@ -96,12 +94,12 @@ const bfs: PathfindingAlgorithm = function* (
   };
 };
 
-function reconstructPath(cell: Cell): [number, number][] {
-  const path: [number, number][] = [];
+function reconstructPath(cell: Cell): Point[] {
+  const path: Point[] = [];
 
   let currentCell: Cell | null = cell;
   while (currentCell !== null) {
-    path.unshift([currentCell.x, currentCell.y]);
+    path.unshift(currentCell);
     currentCell = currentCell.parent;
   }
 

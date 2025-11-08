@@ -5,24 +5,23 @@ import {
   type PathfindingAlgorithm,
 } from "$lib/components/PathRenderer.svelte";
 import { MinPriorityQueue } from "$lib/MinPriorityQueue";
+import { equal, type Point } from "$lib/point";
 import { SvelteSet } from "svelte/reactivity";
 
-type Cell = {
-  x: number;
-  y: number;
+type Cell = Point & {
   isWall: boolean;
 };
 
 const dijkstra: PathfindingAlgorithm = function* (
-  start: Pair<number>,
-  end: Pair<number>,
+  start: Point,
+  end: Point,
   width: number,
   height: number,
   walls: SvelteSet<CellKey>
 ): Generator<AlgorithmStep, void, void> {
   const queue = new MinPriorityQueue<Cell>();
   const distanceMap = new Map<CellKey, number>();
-  const previousMap = new Map<CellKey, Pair<number>>();
+  const previousMap = new Map<CellKey, Point>();
   const visited = new SvelteSet<CellKey>();
   const tiles = Array.from({ length: height }, (_, y) =>
     Array.from({ length: width }, (_, x) => ({
@@ -33,20 +32,20 @@ const dijkstra: PathfindingAlgorithm = function* (
   ).flat();
 
   for (const tile of tiles) {
-    const key = getKey(tile.x, tile.y);
+    const key = getKey(tile);
 
     distanceMap.set(key, Infinity);
   }
 
-  const startKey = getKey(start[0], start[1]);
+  const startKey = getKey(start);
   distanceMap.set(startKey, 0);
-  queue.insert(tiles[start[0] + width * start[1]], 0, startKey);
+  queue.insert(tiles[start.x + width * start.y], 0, startKey);
 
   while (!queue.isEmpty()) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const min = queue.extractMin()!;
     const current = min.value;
-    const currentKey = getKey(current.x, current.y);
+    const currentKey = getKey(current);
 
     if (visited.has(currentKey)) {
       continue;
@@ -54,20 +53,20 @@ const dijkstra: PathfindingAlgorithm = function* (
 
     visited.add(currentKey);
 
-    if (current.x === end[0] && current.y === end[1]) {
+    if (equal(current, end)) {
       break;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const currentDistance = distanceMap.get(currentKey)!;
-    const neighbours = [
-      [current.x + 1, current.y],
-      [current.x - 1, current.y],
-      [current.x, current.y + 1],
-      [current.x, current.y - 1],
+    const neighbours: Point[] = [
+      { x: current.x + 1, y: current.y },
+      { x: current.x - 1, y: current.y },
+      { x: current.x, y: current.y + 1 },
+      { x: current.x, y: current.y - 1 },
     ];
 
-    for (const [x, y] of neighbours) {
+    for (const { x, y } of neighbours) {
       const neighbour = tiles[x + y * width];
 
       if (
@@ -81,13 +80,13 @@ const dijkstra: PathfindingAlgorithm = function* (
         continue;
       }
 
-      const neighbourKey = getKey(neighbour.x, neighbour.y);
+      const neighbourKey = getKey(neighbour);
       const distance = currentDistance + 1;
 
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (distance < distanceMap.get(neighbourKey)!) {
         distanceMap.set(neighbourKey, distance);
-        previousMap.set(neighbourKey, [current.x, current.y]);
+        previousMap.set(neighbourKey, current);
 
         if (!queue.has(neighbourKey)) {
           queue.insert(neighbour, distance, neighbourKey);
@@ -96,11 +95,9 @@ const dijkstra: PathfindingAlgorithm = function* (
         }
 
         yield {
-          path: reconstructPath(previousMap, [neighbour.x, neighbour.y]),
+          path: reconstructPath(previousMap, neighbour),
           visited,
-          frontier: new SvelteSet(
-            queue.data.map((node) => getKey(node.value.x, node.value.y))
-          ),
+          frontier: new SvelteSet(queue.data.map((node) => getKey(node.value))),
         };
       }
     }
@@ -109,20 +106,18 @@ const dijkstra: PathfindingAlgorithm = function* (
   yield {
     path: reconstructPath(previousMap, end),
     visited,
-    frontier: new SvelteSet(
-      queue.data.map((node) => getKey(node.value.x, node.value.y))
-    ),
+    frontier: new SvelteSet(queue.data.map((node) => getKey(node.value))),
   };
 };
 
 function reconstructPath(
-  previousMap: Map<CellKey, Pair<number>>,
-  current: Pair<number>
-): Pair<number>[] {
-  const path: Pair<number>[] = [current];
-  while (previousMap.has(getKey(current[0], current[1]))) {
+  previousMap: Map<CellKey, Point>,
+  current: Point
+): Point[] {
+  const path: Point[] = [current];
+  while (previousMap.has(getKey(current))) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    current = previousMap.get(getKey(current[0], current[1]))!;
+    current = previousMap.get(getKey(current))!;
     path.unshift(current);
   }
 

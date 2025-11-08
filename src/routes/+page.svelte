@@ -8,6 +8,7 @@
     type PathfindingAlgorithm,
   } from "$lib/components/PathRenderer.svelte";
   import { createMaze } from "$lib/createMaze";
+  import type { Point } from "$lib/point";
   import { SvelteSet } from "svelte/reactivity";
 
   const PATHFINDING_ALGORITHMS = {
@@ -36,8 +37,8 @@
   let walls = $state(new SvelteSet<CellKey>());
   let width = $state(50);
   let height = $state(25);
-  let start: Pair<number> = $state([0, 0]);
-  let end: Pair<number> = $state([49, 24]);
+  let start: Point = $state({ x: 0, y: 0 });
+  let end: Point = $state({ x: 49, y: 24 });
   let renderer: PathRenderer;
 
   let algorithmName: keyof typeof PATHFINDING_ALGORITHMS = $state("astar");
@@ -84,6 +85,7 @@
           <li>Left click and drag on the grid to place walls</li>
           <li>Right click and drag on the grid to delete walls</li>
           <li>Note that dragging too fast will skip grid cells</li>
+          <li>You cannot edit the maze while the visualisation is running</li>
         </ul>
       </details>
     </div>

@@ -2,18 +2,17 @@ import { SvelteSet } from "svelte/reactivity";
 import { getKey, type CellKey } from "./components/PathRenderer.svelte";
 import { OrderedSet } from "./OrderedSet";
 import { astar } from "./algorithms/astar";
+import { add, equal, scale, type Point } from "./point";
 
-type Cell = {
-  x: number;
-  y: number;
+type Cell = Point & {
   isWall: boolean;
 };
 
 function createMaze(
   width: number,
   height: number,
-  start: Pair<number>,
-  end: Pair<number>
+  start: Point,
+  end: Point
 ): SvelteSet<CellKey> {
   const cells: Cell[] = [];
   const originalWidth = width;
@@ -32,7 +31,7 @@ function createMaze(
     }
   }
 
-  const startingCell = getCell(cells, width, start[0], start[1]);
+  const startingCell = getCell(cells, width, start);
   const startingCellNeighbours = getNeighbours(
     startingCell,
     width,
@@ -42,13 +41,13 @@ function createMaze(
   );
   const frontier = new OrderedSet<Cell>();
   const inMaze = new Set<CellKey>();
-  const endCell = getCell(cells, width, end[0], end[1]);
+  const endCell = getCell(cells, width, end);
   const endCellNeighbours = getNeighbours(endCell, width, height, cells, 2);
 
   startingCell.isWall = false;
   endCell.isWall = false;
 
-  inMaze.add(getKey(startingCell.x, startingCell.y));
+  inMaze.add(getKey(startingCell));
 
   for (const neighbour of [...startingCellNeighbours, ...endCellNeighbours]) {
     frontier.add(neighbour.cell);
@@ -65,7 +64,7 @@ function createMaze(
     );
 
     const neighboursInMaze = frontierNeighbours.filter((neighbour) =>
-      inMaze.has(getKey(neighbour.cell.x, neighbour.cell.y))
+      inMaze.has(getKey(neighbour.cell))
     );
 
     if (neighboursInMaze.length === 0) {
@@ -76,21 +75,16 @@ function createMaze(
     const target =
       neighboursInMaze[Math.floor(Math.random() * neighboursInMaze.length)];
 
-    const wall = getCell(
-      cells,
-      width,
-      frontierTile.x + target.direction[0],
-      frontierTile.y + target.direction[1]
-    );
+    const wall = getCell(cells, width, add(frontierTile, target.direction));
 
-    inMaze.add(getKey(frontierTile.x, frontierTile.y));
+    inMaze.add(getKey(frontierTile));
     wall.isWall = false;
     frontierTile.isWall = false;
 
     frontier.remove(frontierTile);
 
     for (const neighbour of frontierNeighbours) {
-      if (!inMaze.has(getKey(neighbour.cell.x, neighbour.cell.y))) {
+      if (!inMaze.has(getKey(neighbour.cell))) {
         frontier.add(neighbour.cell);
       }
     }
@@ -101,11 +95,11 @@ function createMaze(
       .filter(
         (cell) =>
           cell.isWall &&
-          (cell.x !== end[0] || cell.y !== end[1]) &&
+          !equal(cell, end) &&
           cell.x < originalWidth &&
           cell.y < originalHeight
       )
-      .map((cell) => getKey(cell.x, cell.y))
+      .map((cell) => getKey(cell))
   );
 
   // hack to ensure the maze is always solvable...
@@ -113,7 +107,7 @@ function createMaze(
   const generator = astar(start, end, originalWidth, originalHeight, walls);
 
   let next = generator.next();
-  let path: Pair<number>[] = [];
+  let path: Point[] = [];
   while (!next.done) {
     path = next.value.path;
     next = generator.next();
@@ -132,12 +126,12 @@ function getNeighbours(
   height: number,
   cells: Cell[],
   distanceMultiplier: number = 1
-): { cell: Cell; direction: Pair<number> }[] {
-  const directions: Pair<number>[] = [
-    [1, 0],
-    [0, 1],
-    [-1, 0],
-    [0, -1],
+): { cell: Cell; direction: Point }[] {
+  const directions: Point[] = [
+    { x: 1, y: 0 },
+    { x: 0, y: 1 },
+    { x: -1, y: 0 },
+    { x: 0, y: -1 },
   ];
 
   return directions
@@ -146,8 +140,7 @@ function getNeighbours(
         cell: getCell(
           cells,
           width,
-          cell.x + direction[0] * distanceMultiplier,
-          cell.y + direction[1] * distanceMultiplier
+          add(cell, scale(direction, distanceMultiplier))
         ),
         direction,
       };
@@ -162,7 +155,7 @@ function getNeighbours(
     );
 }
 
-function getCell(cells: Cell[], width: number, x: number, y: number): Cell {
+function getCell(cells: Cell[], width: number, { x, y }: Point): Cell {
   if (x < 0 || y < 0) {
     return undefined as unknown as Cell;
   }

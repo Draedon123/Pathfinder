@@ -1,18 +1,25 @@
 <script lang="ts" module>
-  function getKey(x: number, y: number): CellKey {
-    return `${x},${y}`;
+  function getKey(point: Point): CellKey;
+  function getKey(x: number, y: number): CellKey;
+  function getKey(x: number | Point, y?: number): CellKey {
+    if (typeof x !== "number") {
+      y = x.y;
+      x = x.x;
+    }
+
+    return `${x},${y as number}`;
   }
 
   type PathfindingAlgorithm = (
-    start: Pair<number>,
-    end: Pair<number>,
+    start: Point,
+    end: Point,
     width: number,
     height: number,
     walls: SvelteSet<CellKey>
   ) => Generator<AlgorithmStep, void, void>;
 
   type AlgorithmStep = {
-    path: Pair<number>[];
+    path: Point[];
     visited: SvelteSet<CellKey>;
     frontier: SvelteSet<CellKey>;
   };
@@ -22,6 +29,7 @@
 
 <script lang="ts">
   import { createMaze } from "$lib/createMaze";
+  import { equal, type Point } from "$lib/point";
   import { onDestroy } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import { writable } from "svelte/store";
@@ -30,8 +38,8 @@
     width: number;
     height: number;
     walls?: SvelteSet<CellKey>;
-    start?: Pair<number>;
-    end?: Pair<number>;
+    start?: Point;
+    end?: Point;
     pathfindingAlgorithm: PathfindingAlgorithm;
   };
 
@@ -41,8 +49,8 @@
   let {
     width,
     height,
-    start = $bindable([0, 0]),
-    end = $bindable([width - 1, height - 1]),
+    start = $bindable({ x: 0, y: 0 }),
+    end = $bindable({ x: width - 1, y: height - 1 }),
     walls = $bindable(createMaze(width, height, start, end)),
     pathfindingAlgorithm: algorithm = $bindable(),
   }: Props = $props();
@@ -53,7 +61,7 @@
   // initial value doesn't matter
   let dragAction: DragAction = "add";
   let visualisationData = writable({
-    path: [] as [number, number][],
+    path: [] as Point[],
     visited: new SvelteSet<CellKey>(),
     frontier: new SvelteSet<CellKey>(),
   });
@@ -106,7 +114,7 @@
     };
   }
 
-  function cellOnMouseDown(x: number, y: number, rightClick: boolean): void {
+  function cellOnMouseDown(cell: Point, rightClick: boolean): void {
     if (visualisationStarted) {
       return;
     }
@@ -117,25 +125,25 @@
 
     if (rightClick) {
       dragAction = "remove";
-    } else if (x === start[0] && y === start[1]) {
+    } else if (equal(cell, start)) {
       dragAction = "movestart";
-    } else if (x === end[0] && y === end[1]) {
+    } else if (equal(cell, end)) {
       dragAction = "movegoal";
     } else {
       dragAction = "add";
     }
 
-    cellOnMouseMove(x, y);
-    toggled.add(getKey(x, y));
+    cellOnMouseMove(cell);
+    toggled.add(getKey(cell));
   }
 
-  function cellOnMouseMove(x: number, y: number): void {
-    const key = getKey(x, y);
+  function cellOnMouseMove(cell: Point): void {
+    const key = getKey(cell);
     if (
       visualisationStarted ||
       !mouseDown ||
-      (x === start[0] && y === start[1]) ||
-      (x === end[0] && y === end[1])
+      equal(cell, start) ||
+      equal(cell, end)
     ) {
       return;
     }
@@ -156,15 +164,15 @@
         break;
       }
       case "movestart": {
-        if (x !== end[0] || y !== end[1]) {
-          start = [x, y];
+        if (!equal(cell, end)) {
+          start = cell;
         }
 
         break;
       }
       case "movegoal": {
-        if (x !== start[0] || y !== start[1]) {
-          end = [x, y];
+        if (!equal(cell, start)) {
+          end = cell;
         }
 
         break;
@@ -174,7 +182,7 @@
     toggled.add(key);
   }
 
-  function cellOnMouseUp(x: number, y: number): void {
+  function cellOnMouseUp(cell: Point): void {
     if (visualisationStarted) {
       return;
     }
@@ -183,7 +191,7 @@
       case "movestart":
       // fallthrough
       case "movegoal": {
-        const key = getKey(x, y);
+        const key = getKey(cell);
 
         walls.delete(key);
       }
@@ -216,27 +224,28 @@
   <div class="grid" style="grid-template-columns: repeat({width}, 1fr)">
     {#each { length: width }, x}
       {#each { length: height }, y}
-        {@const key = getKey(x, y)}
+        {@const position = { x, y }}
+        {@const key = getKey(position)}
         <div
           class="cell"
           class:wall={walls.has(key)}
-          class:start={x === start[0] && y === start[1]}
-          class:goal={x === end[0] && y === end[1]}
-          class:path={$visualisationData.path.some(
-            (tile) => tile[0] === x && tile[1] === y
+          class:start={equal(position, start)}
+          class:goal={equal(position, end)}
+          class:path={$visualisationData.path.some((tile) =>
+            equal(position, tile)
           )}
           class:visited={$visualisationData.visited.has(key)}
           class:frontier={$visualisationData.frontier.has(key)}
           style="grid-column-start: {x + 1}; grid-row-start: {y + 1};"
           onmousedown={(event) => {
             // event.button === 2 is a right click
-            cellOnMouseDown(x, y, event.button === 2);
+            cellOnMouseDown(position, event.button === 2);
           }}
           onmousemove={() => {
-            cellOnMouseMove(x, y);
+            cellOnMouseMove(position);
           }}
           onmouseup={() => {
-            cellOnMouseUp(x, y);
+            cellOnMouseUp(position);
           }}
           oncontextmenu={(event) => {
             event.preventDefault();
