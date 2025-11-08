@@ -9,9 +9,15 @@
     width: number,
     height: number,
     walls: SvelteSet<CellKey>
-  ) => Generator<Pair<number>[], void, void>;
+  ) => Generator<AlgorithmStep, void, void>;
 
-  export { getKey, type PathfindingAlgorithm };
+  type AlgorithmStep = {
+    path: Pair<number>[];
+    visited: SvelteSet<CellKey>;
+    frontier: SvelteSet<CellKey>;
+  };
+
+  export { getKey, type PathfindingAlgorithm, type AlgorithmStep };
 </script>
 
 <script lang="ts">
@@ -48,12 +54,18 @@
   // initial value doesn't matter
   let dragAction: DragAction = "add";
   let path: [number, number][] = $state([]);
+  // svelte-ignore non_reactive_update
+  let visited = new SvelteSet<CellKey>();
+  // svelte-ignore non_reactive_update
+  let frontier = new SvelteSet<CellKey>();
   let intervalHandle: NodeJS.Timeout | null = null;
 
   let visualisationStarted = false;
   export function startVisualisation(onlyUpdate: boolean = false): void {
     if (visualisationStarted) {
       path = [];
+      visited.clear();
+      frontier.clear();
     }
 
     if (onlyUpdate && !visualisationStarted) {
@@ -74,7 +86,9 @@
         clearInterval(intervalHandle as NodeJS.Timeout);
         intervalHandle = null;
       } else {
-        path = newPath.value as Pair<number>[];
+        path = newPath.value.path;
+        visited = newPath.value.visited;
+        frontier = newPath.value.frontier;
       }
     }, 5);
   }
@@ -196,12 +210,15 @@
   <div class="grid" style="grid-template-columns: repeat({width}, 1fr)">
     {#each { length: width }, x}
       {#each { length: height }, y}
+        {@const key = getKey(x, y)}
         <div
           class="cell"
-          class:wall={walls.has(getKey(x, y))}
+          class:wall={walls.has(key)}
           class:start={x === start[0] && y === start[1]}
           class:goal={x === end[0] && y === end[1]}
           class:path={path.some((tile) => tile[0] === x && tile[1] === y)}
+          class:visited={visited.has(key)}
+          class:frontier={frontier.has(key)}
           style="grid-column-start: {x + 1}; grid-row-start: {y + 1};"
           onmousedown={(event) => {
             // event.button === 2 is a right click
@@ -240,6 +257,14 @@
 
       &.wall {
         background-color: #000;
+      }
+
+      &.visited {
+        background-color: #888;
+      }
+
+      &.frontier {
+        background-color: #f0f;
       }
 
       &.path {

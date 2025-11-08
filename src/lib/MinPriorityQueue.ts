@@ -5,7 +5,7 @@ type QueueNode<T> = {
 };
 
 class MinPriorityQueue<T> {
-  private readonly data: QueueNode<T>[] = [];
+  public readonly data: QueueNode<T>[] = [];
   private readonly indexMap: Map<string, number> = new Map();
 
   private left(i: number): number {

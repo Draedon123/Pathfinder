@@ -1,10 +1,11 @@
 import {
   getKey,
+  type AlgorithmStep,
   type CellKey,
   type PathfindingAlgorithm,
 } from "$lib/components/PathRenderer.svelte";
 import { MinPriorityQueue } from "$lib/MinPriorityQueue";
-import type { SvelteSet } from "svelte/reactivity";
+import { SvelteSet } from "svelte/reactivity";
 
 type Cell = {
   x: number;
@@ -18,11 +19,11 @@ const dijkstra: PathfindingAlgorithm = function* (
   width: number,
   height: number,
   walls: SvelteSet<CellKey>
-): Generator<Pair<number>[], void, void> {
+): Generator<AlgorithmStep, void, void> {
   const queue = new MinPriorityQueue<Cell>();
   const distanceMap = new Map<CellKey, number>();
   const previousMap = new Map<CellKey, Pair<number>>();
-  const visisted = new Set<CellKey>();
+  const visited = new SvelteSet<CellKey>();
   const tiles = Array.from({ length: height }, (_, y) =>
     Array.from({ length: width }, (_, x) => ({
       x,
@@ -32,12 +33,14 @@ const dijkstra: PathfindingAlgorithm = function* (
   ).flat();
 
   for (const tile of tiles) {
-    const distance = tile.x === start[0] && tile.y === start[1] ? 0 : Infinity;
     const key = getKey(tile.x, tile.y);
 
-    distanceMap.set(key, distance);
-    queue.insert(tile, distance, key);
+    distanceMap.set(key, Infinity);
   }
+
+  const startKey = getKey(start[0], start[1]);
+  distanceMap.set(startKey, 0);
+  queue.insert(tiles[start[0] + width * start[1]], 0, startKey);
 
   while (!queue.isEmpty()) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -45,11 +48,11 @@ const dijkstra: PathfindingAlgorithm = function* (
     const current = min.value;
     const currentKey = getKey(current.x, current.y);
 
-    if (visisted.has(currentKey)) {
+    if (visited.has(currentKey)) {
       continue;
     }
 
-    visisted.add(currentKey);
+    visited.add(currentKey);
 
     if (current.x === end[0] && current.y === end[1]) {
       break;
@@ -85,14 +88,31 @@ const dijkstra: PathfindingAlgorithm = function* (
       if (distance < distanceMap.get(neighbourKey)!) {
         distanceMap.set(neighbourKey, distance);
         previousMap.set(neighbourKey, [current.x, current.y]);
-        queue.decreasePriority(neighbourKey, distance);
 
-        yield reconstructPath(previousMap, [neighbour.x, neighbour.y]);
+        if (!queue.has(neighbourKey)) {
+          queue.insert(neighbour, distance, neighbourKey);
+        } else {
+          queue.decreasePriority(neighbourKey, distance);
+        }
+
+        yield {
+          path: reconstructPath(previousMap, [neighbour.x, neighbour.y]),
+          visited,
+          frontier: new SvelteSet(
+            queue.data.map((node) => getKey(node.value.x, node.value.y))
+          ),
+        };
       }
     }
   }
 
-  yield reconstructPath(previousMap, end);
+  yield {
+    path: reconstructPath(previousMap, end),
+    visited,
+    frontier: new SvelteSet(
+      queue.data.map((node) => getKey(node.value.x, node.value.y))
+    ),
+  };
 };
 
 function reconstructPath(

@@ -2,9 +2,10 @@ import {
   getKey,
   type PathfindingAlgorithm,
   type CellKey,
+  type AlgorithmStep,
 } from "$lib/components/PathRenderer.svelte";
 import { MinPriorityQueue } from "$lib/MinPriorityQueue";
-import type { SvelteSet } from "svelte/reactivity";
+import { SvelteSet } from "svelte/reactivity";
 
 type Heuristic = (start: Pair<number>, end: Pair<number>) => number;
 
@@ -14,9 +15,10 @@ const astar: PathfindingAlgorithm = function* (
   width: number,
   height: number,
   walls: SvelteSet<CellKey>
-): Generator<Pair<number>[], void, void> {
+): Generator<AlgorithmStep, void, void> {
   const openSet = new MinPriorityQueue<Pair<number>>();
   const previousMap = new Map<CellKey, Pair<number>>();
+  const visited = new SvelteSet<CellKey>();
   const gScores = new Map<CellKey, number>();
   const fScores = new Map<CellKey, number>();
 
@@ -42,12 +44,19 @@ const astar: PathfindingAlgorithm = function* (
     const current = openSet.extractMin()!.value;
 
     if (current[0] === end[0] && current[1] === end[1]) {
-      yield reconstructPath(previousMap, current);
+      yield {
+        path: reconstructPath(previousMap, current),
+        visited,
+        frontier: new SvelteSet(
+          openSet.data.map((node) => getKey(node.value[0], node.value[1]))
+        ),
+      };
       return;
     }
 
     const currentKey = getKey(current[0], current[1]);
     openSet.delete(currentKey);
+    visited.add(currentKey);
 
     const neighbours: Pair<number>[] = [
       [current[0] + 1, current[1]],
@@ -83,12 +92,24 @@ const astar: PathfindingAlgorithm = function* (
           openSet.insert(neighbour, fScore, neighbourKey);
         }
 
-        yield reconstructPath(previousMap, neighbour);
+        yield {
+          path: reconstructPath(previousMap, neighbour),
+          visited,
+          frontier: new SvelteSet(
+            openSet.data.map((node) => getKey(node.value[0], node.value[1]))
+          ),
+        };
       }
     }
   }
 
-  yield [start];
+  yield {
+    path: [start],
+    visited,
+    frontier: new SvelteSet(
+      openSet.data.map((node) => getKey(node.value[0], node.value[1]))
+    ),
+  };
 };
 
 function reconstructPath(
